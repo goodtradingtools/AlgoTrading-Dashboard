@@ -1,46 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Trading Monitor</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Trading Monitor Pro</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
-        .profit { color: #4caf50; font-size: 24px; font-weight: bold; }
-        .drawdown { color: #f44336; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+        .card { background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; color: #fff; }
+        h3 { margin-top: 0; color: #4dabf7; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .val { font-weight: bold; color: #fff; }
+        .profit-val { color: #4caf50; font-size: 26px; margin: 10px 0; }
+        .loss-val { color: #f44336; }
+        .stats-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
+        small { color: #888; display: block; margin-top: 15px; font-style: italic; }
     </style>
 </head>
 <body>
-    <h1>Multi-Account Monitoring</h1>
-    <div id="dashboard" class="grid"></div>
+    <h1>Real-Time Trading Monitor</h1>
+    <div id="dashboard" class="grid">Memuat data...</div>
 
     <script>
         const SB_URL = "https://dbkbxiyhvomjamtdnfuf.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRia2J4aXlodm9tamFtdGRuZnVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTI4NDYsImV4cCI6MjA5MDk2ODg0Nn0.W_nSLLHa1q_yvH76Rqy82E577TMtYH1Gk20wXOEe1F0";
 
         async function fetchData() {
-            const res = await fetch(`${SB_URL}/rest/v1/trading_accounts`, {
-                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
-            });
-            const data = await res.json();
-            renderCards(data);
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/trading_accounts?select=*`, {
+                    headers: { 
+                        "apikey": SB_KEY, 
+                        "Authorization": `Bearer ${SB_KEY}` 
+                    }
+                });
+                const data = await res.json();
+                renderCards(data);
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                document.getElementById('dashboard').innerHTML = "Gagal memuat data. Cek Console (F12).";
+            }
         }
 
         function renderCards(accounts) {
             const container = document.getElementById('dashboard');
-            container.innerHTML = accounts.map(acc => `
-                <div class="card">
-                    <h3>${acc.account_name} (${acc.broker_name})</h3>
-                    <p>Balance: $${acc.balance}</p>
-                    <div class="profit">Profit: $${acc.profit}</div>
-                    <p class="drawdown">Daily DD: ${acc.daily_drawdown}% | Max DD: ${acc.max_drawdown}%</p>
-                    <small>Last Update: ${new Date(acc.last_update).toLocaleTimeString()}</small>
-                </div>
-            `).join('');
+            if (accounts.length === 0) {
+                container.innerHTML = "Belum ada data di tabel trading_accounts.";
+                return;
+            }
+
+            container.innerHTML = accounts.map(acc => {
+                const isFloatingMinus = acc.floating_now < 0;
+                return `
+                    <div class="card">
+                        <h3>${acc.account_name || 'Unnamed'}</h3>
+                        <div class="stats-row"><span>Broker:</span> <span>${acc.broker_name || '-'}</span></div>
+                        <div class="stats-row"><span>Balance:</span> <span class="val">$${Number(acc.balance).toLocaleString()}</span></div>
+                        <div class="stats-row"><span>Equity:</span> <span class="val">$${Number(acc.equity).toLocaleString()}</span></div>
+                        
+                        <div class="profit-val" style="color: ${isFloatingMinus ? '#f44336' : '#4caf50'}">
+                            $${Number(acc.floating_now || 0).toLocaleString()}
+                        </div>
+                        
+                        <div class="stats-row">
+                            <span>Max Daily Floating:</span> 
+                            <span class="loss-val">$${Number(acc.daily_floating_val || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Max Lifetime Floating:</span> 
+                            <span class="loss-val">$${Number(acc.max_floating_val || 0).toLocaleString()}</span>
+                        </div>
+                        
+                        <small>Sync terakhir: ${new Date(acc.last_update).toLocaleTimeString()}</small>
+                    </div>
+                `;
+            }).join('');
         }
 
-        setInterval(fetchData, 30000); // Refresh web tiap 30 detik
+        setInterval(fetchData, 10000); // Update tiap 10 detik
         fetchData();
     </script>
 </body>
