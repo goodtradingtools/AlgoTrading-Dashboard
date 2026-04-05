@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trading Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .profit { color: #4caf50; font-size: 24px; font-weight: bold; }
+        .drawdown { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>Multi-Account Monitoring</h1>
+    <div id="dashboard" class="grid"></div>
+
+    <script>
+        const SB_URL = "URL_SUPABASE_ANDA";
+        const SB_KEY = "API_KEY_ANDA";
+
+        async function fetchData() {
+            const res = await fetch(`${SB_URL}/rest/v1/trading_accounts`, {
+                headers: { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}` }
+            });
+            const data = await res.json();
+            renderCards(data);
+        }
+
+        function renderCards(accounts) {
+            const container = document.getElementById('dashboard');
+            container.innerHTML = accounts.map(acc => `
+                <div class="card">
+                    <h3>${acc.account_name} (${acc.broker_name})</h3>
+                    <p>Balance: $${acc.balance}</p>
+                    <div class="profit">Profit: $${acc.profit}</div>
+                    <p class="drawdown">Daily DD: ${acc.daily_drawdown}% | Max DD: ${acc.max_drawdown}%</p>
+                    <small>Last Update: ${new Date(acc.last_update).toLocaleTimeString()}</small>
+                </div>
+            `).join('');
+        }
+
+        setInterval(fetchData, 30000); // Refresh web tiap 30 detik
+        fetchData();
+    </script>
+</body>
+</html>
