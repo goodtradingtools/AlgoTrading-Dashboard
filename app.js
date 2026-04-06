@@ -7,7 +7,7 @@ async function updateDashboard() {
     const { data: accounts, error } = await _supabase
         .from('trading_accounts')
         .select('*')
-        .order('last_update_wib', { ascending: false });
+        .order('last_update', { ascending: false });
 
     if (error) {
         console.error("Fetch error:", error);
