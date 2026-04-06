@@ -1,81 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Trading Monitor Pro</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
-        .card { background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; color: #fff; }
-        h3 { margin-top: 0; color: #4dabf7; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .val { font-weight: bold; color: #fff; }
-        .profit-val { color: #4caf50; font-size: 26px; margin: 10px 0; }
-        .loss-val { color: #f44336; }
-        .stats-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
-        small { color: #888; display: block; margin-top: 15px; font-style: italic; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoTrade | Trading Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <h1>Real-Time Trading Monitor</h1>
-    <div id="dashboard" class="grid">Memuat data...</div>
+<body class="dark-theme">
+    <nav class="navbar">
+        <div class="logo">ALGOTRADE <span>TERMINAL</span></div>
+        <div class="status-badge">
+            <span class="dot"></span> LIVE DATA (WIB)
+        </div>
+    </nav>
 
-    <script>
-        const SB_URL = "https://dbkbxiyhvomjamtdnfuf.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRia2J4aXlodm9tamFtdGRuZnVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTI4NDYsImV4cCI6MjA5MDk2ODg0Nn0.W_nSLLHa1q_yvH76Rqy82E577TMtYH1Gk20wXOEe1F0";
+    <main class="container">
+        <header class="account-header">
+            <h1 id="acc-name">Loading Account...</h1>
+            <p>Account Number: <span id="acc-num" class="mono">-</span></p>
+            <p class="update-time">Last Update: <span id="last-update" class="mono">--:--:--</span></p>
+        </header>
 
-        async function fetchData() {
-            try {
-                const res = await fetch(`${SB_URL}/rest/v1/trading_accounts?select=*`, {
-                    headers: { 
-                        "apikey": SB_KEY, 
-                        "Authorization": `Bearer ${SB_KEY}` 
-                    }
-                });
-                const data = await res.json();
-                renderCards(data);
-            } catch (err) {
-                console.error("Error fetching data:", err);
-                document.getElementById('dashboard').innerHTML = "Gagal memuat data. Cek Console (F12).";
-            }
-        }
+        <section class="stats-grid">
+            <div class="card">
+                <label>Balance</label>
+                <div class="value mono" id="balance">$0.00</div>
+            </div>
+            <div class="card highlight">
+                <label>Equity</label>
+                <div class="value mono" id="equity">$0.00</div>
+            </div>
+            <div class="card">
+                <label>Daily Profit</label>
+                <div class="value mono profit" id="daily-profit">+$0.00</div>
+            </div>
+            <div class="card">
+                <label>Current Floating</label>
+                <div class="value mono" id="floating">$0.00</div>
+            </div>
+        </section>
 
-        function renderCards(accounts) {
-            const container = document.getElementById('dashboard');
-            if (accounts.length === 0) {
-                container.innerHTML = "Belum ada data di tabel trading_accounts.";
-                return;
-            }
+        <section class="chart-section">
+            <div class="card full-width">
+                <label>Performance Growth (Daily)</label>
+                <canvas id="growthChart"></canvas>
+            </div>
+        </section>
 
-            container.innerHTML = accounts.map(acc => {
-                const isFloatingMinus = acc.floating_now < 0;
-                return `
-                    <div class="card">
-                        <h3>${acc.account_name || 'Unnamed'}</h3>
-                        <div class="stats-row"><span>Broker:</span> <span>${acc.broker_name || '-'}</span></div>
-                        <div class="stats-row"><span>Balance:</span> <span class="val">$${Number(acc.balance).toLocaleString()}</span></div>
-                        <div class="stats-row"><span>Equity:</span> <span class="val">$${Number(acc.equity).toLocaleString()}</span></div>
-                        
-                        <div class="profit-val" style="color: ${isFloatingMinus ? '#f44336' : '#4caf50'}">
-                            $${Number(acc.floating_now || 0).toLocaleString()}
-                        </div>
-                        
-                        <div class="stats-row">
-                            <span>Max Daily Floating:</span> 
-                            <span class="loss-val">$$-${Number(acc.daily_floating_val || 0).toLocaleString()}</span>
-                        </div>
-                        <div class="stats-row">
-                            <span>Max Lifetime Floating:</span> 
-                            <span class="loss-val">$$-${Number(acc.max_floating_val || 0).toLocaleString()}</span>
-                        </div>
-                        
-                        <small>Sync terakhir: ${new Date(acc.last_update).toLocaleTimeString()}</small>
-                    </div>
-                `;
-            }).join('');
-        }
+        <section class="stats-grid footer-stats">
+            <div class="card">
+                <label>Max Drawdown (Lifetime)</label>
+                <div class="value mono loss" id="max-dd">$0.00</div>
+            </div>
+            <div class="card">
+                <label>Daily Drawdown</label>
+                <div class="value mono loss" id="daily-dd">$0.00</div>
+            </div>
+        </section>
+    </main>
 
-        setInterval(fetchData, 10000); // Update tiap 10 detik
-        fetchData();
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
