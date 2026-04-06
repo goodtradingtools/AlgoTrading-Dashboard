@@ -61,11 +61,11 @@
                         
                         <div class="stats-row">
                             <span>Max Daily Floating:</span> 
-                            <span class="loss-val">$${-Number(acc.daily_floating_val || 0).toLocaleString()}</span>
+                            <span class="loss-val">$$-${Number(acc.daily_floating_val || 0).toLocaleString()}</span>
                         </div>
                         <div class="stats-row">
                             <span>Max Lifetime Floating:</span> 
-                            <span class="loss-val">$${-Number(acc.max_floating_val || 0).toLocaleString()}</span>
+                            <span class="loss-val">$$-${Number(acc.max_floating_val || 0).toLocaleString()}</span>
                         </div>
                         
                         <small>Sync terakhir: ${new Date(acc.last_update).toLocaleTimeString()}</small>
