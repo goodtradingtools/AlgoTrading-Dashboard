@@ -1,5 +1,5 @@
 // Konfigurasi Supabase Anda
-const _supabase = supabase.createClient('URL_ANDA', 'KEY_ANDA');
+const _supabase = supabase.createClient('https://dbkbxiyhvomjamtdnfuf.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRia2J4aXlodm9tamFtdGRuZnVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTI4NDYsImV4cCI6MjA5MDk2ODg0Nn0.W_nSLLHa1q_yvH76Rqy82E577TMtYH1Gk20wXOEe1F0');
 const NOMOR_AKUN = 69670609; // Ganti sesuai akun Anda
 
 async function fetchData() {
