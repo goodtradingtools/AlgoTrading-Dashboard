@@ -3,63 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlgoTrade | Trading Terminal</title>
+    <title>AlgoTrade | Multi-Terminal Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-theme">
     <nav class="navbar">
-        <div class="logo">ALGOTRADE <span>TERMINAL</span></div>
+        <div class="logo">ALGOTRADE <span>SYSTEM</span></div>
         <div class="status-badge">
-            <span class="dot"></span> LIVE DATA (WIB)
+            <span class="dot pulse"></span> <span id="account-count">0</span> TERMINALS ACTIVE
         </div>
     </nav>
 
     <main class="container">
-        <header class="account-header">
-            <h1 id="acc-name">Loading Account...</h1>
-            <p>Account Number: <span id="acc-num" class="mono">-</span></p>
-            <p class="update-time">Last Update: <span id="last-update" class="mono">--:--:--</span></p>
+        <header class="page-header">
+            <h1>Account <span>Monitoring</span></h1>
+            <p>Real-time data synchronization with Supabase via MT4 Expert Advisor.</p>
         </header>
 
-        <section class="stats-grid">
-            <div class="card">
-                <label>Balance</label>
-                <div class="value mono" id="balance">$0.00</div>
-            </div>
-            <div class="card highlight">
-                <label>Equity</label>
-                <div class="value mono" id="equity">$0.00</div>
-            </div>
-            <div class="card">
-                <label>Daily Profit</label>
-                <div class="value mono profit" id="daily-profit">+$0.00</div>
-            </div>
-            <div class="card">
-                <label>Current Floating</label>
-                <div class="value mono" id="floating">$0.00</div>
-            </div>
-        </section>
-
-        <section class="chart-section">
-            <div class="card full-width">
-                <label>Performance Growth (Daily)</label>
-                <canvas id="growthChart"></canvas>
-            </div>
-        </section>
-
-        <section class="stats-grid footer-stats">
-            <div class="card">
-                <label>Max Drawdown (Lifetime)</label>
-                <div class="value mono loss" id="max-dd">$0.00</div>
-            </div>
-            <div class="card">
-                <label>Daily Drawdown</label>
-                <div class="value mono loss" id="daily-dd">$0.00</div>
-            </div>
-        </section>
+        <div id="accounts-grid" class="accounts-grid">
+            <div class="loading-state">Connecting to terminal...</div>
+        </div>
     </main>
 
     <script src="app.js"></script>
