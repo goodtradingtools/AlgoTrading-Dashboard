@@ -16,17 +16,26 @@ async function updateDashboard() {
 
     const grid = document.getElementById('accounts-grid');
     document.getElementById('account-count').innerText = accounts.length;
-    grid.innerHTML = ''; // Clear loading state
+    grid.innerHTML = ''; 
 
     accounts.forEach(acc => {
-        const isProfit = acc.profit >= 0;
-        const isFloatingPos = acc.floating_now >= 0;
+        // --- 1. PROTEKSI DATA NULL (Agar tidak error toLocaleString) ---
+        const equity = (acc.equity ?? 0).toLocaleString();
+        const balance = (acc.balance ?? 0).toLocaleString();
+        const profit = (acc.profit ?? 0).toLocaleString();
+        const floating = (acc.floating_now ?? 0).toLocaleString();
+        const maxDD = (acc.max_floating_val ?? 0).toLocaleString();
+        
+        const isProfit = (acc.profit ?? 0) >= 0;
+        const isFloatingPos = (acc.floating_now ?? 0) >= 0;
 
-        // Format tanggal/jam dari kolom last_update_wib
+        // --- 2. PAKSA FORMAT KE WIB (Asia/Jakarta) ---
+        // Meskipun kolomnya UTC, kita paksa browser menampilkan +7 jam
         const updateTime = new Date(acc.last_update).toLocaleTimeString('id-ID', {
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit'
+            second: '2-digit',
+            timeZone: 'Asia/Jakarta' 
         });
 
         const card = `
@@ -42,12 +51,12 @@ async function updateDashboard() {
                 <div class="main-info">
                     <div>
                         <label>Equity</label>
-                        <span class="val mono">$${acc.equity.toLocaleString()}</span>
+                        <span class="val mono">$${equity}</span>
                     </div>
                     <div style="text-align: right;">
                         <label>Daily Profit</label>
                         <span class="val mono ${isProfit ? 'profit' : 'loss'}">
-                            ${isProfit ? '+' : ''}$${acc.profit.toLocaleString()}
+                            ${isProfit ? '+' : ''}$${profit}
                         </span>
                     </div>
                 </div>
@@ -55,15 +64,15 @@ async function updateDashboard() {
                 <div class="sub-stats">
                     <div class="stat-box">
                         <small>Balance</small>
-                        <span class="mono">$${acc.balance.toLocaleString()}</span>
+                        <span class="mono">$${balance}</span>
                     </div>
                     <div class="stat-box">
                         <small>Floating</small>
-                        <span class="mono ${isFloatingPos ? 'profit' : 'loss'}">$${acc.floating_now.toLocaleString()}</span>
+                        <span class="mono ${isFloatingPos ? 'profit' : 'loss'}">$${floating}</span>
                     </div>
                     <div class="stat-box">
                         <small>Max DD</small>
-                        <span class="mono loss">$${acc.max_floating_val.toLocaleString()}</span>
+                        <span class="mono loss">$${maxDD}</span>
                     </div>
                 </div>
             </div>
@@ -72,8 +81,5 @@ async function updateDashboard() {
     });
 }
 
-// Jalankan update pertama kali
 updateDashboard();
-
-// Refresh data setiap 30 detik agar hemat kuota Supabase tapi tetap real-time
 setInterval(updateDashboard, 30000);
