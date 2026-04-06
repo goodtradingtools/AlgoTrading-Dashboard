@@ -23,7 +23,7 @@ async function updateDashboard() {
         const isFloatingPos = acc.floating_now >= 0;
 
         // Format tanggal/jam dari kolom last_update_wib
-        const updateTime = new Date(acc.last_update_wib).toLocaleTimeString('id-ID', {
+        const updateTime = new Date(acc.last_update).toLocaleTimeString('id-ID', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
