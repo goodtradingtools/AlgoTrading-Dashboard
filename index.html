@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlgoTrade | Multi-Terminal Dashboard</title>
+    <title>AlgoTrade Dashboard</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="style.css?v=2.0">
 </head>
 <body class="dark-theme">
     <nav class="navbar">
@@ -26,6 +29,17 @@
             <div class="loading-state">Connecting to terminal...</div>
         </div>
     </main>
+
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Growth Chart</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body" style="height: 400px;"> <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
