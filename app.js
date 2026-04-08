@@ -3,6 +3,67 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Variable global untuk menyimpan grafik agar bisa dihapus/update
+let myChart = null;
+
+// --- 2. FUNGSI UNTUK MENAMPILKAN GRAFIK (DI MODAL) ---
+async function showGrowthChart(accNumber, accName) {
+    const modal = document.getElementById('chartModal');
+    modal.style.display = "block";
+    document.getElementById('modalTitle').innerText = `Growth: ${accName}`;
+
+    // Ambil data history dari tabel profit_history
+    const { data: history, error } = await _supabase
+        .from('profit_history')
+        .select('report_date, balance_value')
+        .eq('account_number', accNumber)
+        .order('report_date', { ascending: true });
+
+    if (error) {
+        console.error("Error fetching history:", error);
+        return;
+    }
+
+    // Siapkan label (tanggal) dan data (balance)
+    const labels = history.map(h => {
+        const d = new Date(h.report_date);
+        return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+    });
+    const values = history.map(h => h.balance_value);
+
+    // Hancurkan chart lama jika ada agar tidak tumpang tindih
+    if (myChart) { myChart.destroy(); }
+
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Balance ($)',
+                data: values,
+                borderColor: '#00ffbd',
+                backgroundColor: 'rgba(0, 255, 189, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#00ffbd'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: '#2b3139' }, ticks: { color: '#848e9c' } },
+                x: { grid: { display: false }, ticks: { color: '#848e9c' } }
+            }
+        }
+    });
+}
+
+// --- 3. FUNGSI UPDATE DASHBOARD UTAMA ---
 async function updateDashboard() {
     const { data: accounts, error } = await _supabase
         .from('trading_accounts')
@@ -19,7 +80,7 @@ async function updateDashboard() {
     grid.innerHTML = ''; 
 
     accounts.forEach(acc => {
-        // --- 1. PROTEKSI DATA NULL (Agar tidak error toLocaleString) ---
+        // Proteksi data null
         const equity = (acc.equity ?? 0).toLocaleString();
         const balance = (acc.balance ?? 0).toLocaleString();
         const profit = (acc.profit ?? 0).toLocaleString();
@@ -29,8 +90,7 @@ async function updateDashboard() {
         const isProfit = (acc.profit ?? 0) >= 0;
         const isFloatingPos = (acc.floating_now ?? 0) >= 0;
 
-        // --- 2. PAKSA FORMAT KE WIB (Asia/Jakarta) ---
-        // Meskipun kolomnya UTC, kita paksa browser menampilkan +7 jam
+        // Format waktu ke WIB
         const updateTime = new Date(acc.last_update).toLocaleTimeString('id-ID', {
             hour: '2-digit',
             minute: '2-digit',
@@ -38,8 +98,9 @@ async function updateDashboard() {
             timeZone: 'Asia/Jakarta' 
         });
 
+        // Template kartu (Menambahkan event onclick untuk panggil grafik)
         const card = `
-            <div class="card-account">
+            <div class="card-account" onclick="showGrowthChart('${acc.account_number}', '${acc.account_name || 'Account'}')">
                 <div class="card-header">
                     <div>
                         <span class="acc-name">${acc.account_name || 'Unnamed Account'}</span>
@@ -81,5 +142,23 @@ async function updateDashboard() {
     });
 }
 
-updateDashboard();
-setInterval(updateDashboard, 30000);
+// --- 4. LOGIKA MODAL (TUTUP POP-UP) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('chartModal');
+    const closeBtn = document.querySelector('.close-btn');
+
+    // Pakai IF agar tidak error jika tombol belum ada
+    if (closeBtn) {
+        closeBtn.onclick = () => { modal.style.display = "none"; };
+    }
+    
+    if (modal) {
+        window.onclick = (event) => {
+            if (event.target == modal) { modal.style.display = "none"; }
+        };
+    }
+
+    // PAKSA JALANKAN UPDATE DASHBOARD
+    updateDashboard();
+    setInterval(updateDashboard, 30000);
+});
